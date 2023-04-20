@@ -12,25 +12,24 @@ class motionModel():
     def calculateD(self, state):
         D = torch.tensor([[self.m0+ self.m1+self.m2, (0.5*self.m1 + self.m2)*self.l1*torch.cos(state[1]), 0.5*self.m2*self.l2*torch.cos(state[2])],
                   [(0.5*self.m1+self.m2)*self.l1*torch.cos(state[1]), (1/3*self.m1+self.m2)*self.l1*self.l1, 0.5*self.m2*self.l1*self.l2*torch.cos(state[1]-state[2])],
-                  [0.5*self.m2*self.l2*torch.cos(state[2]), 0.5*self.m2*self.l1*self.l2*torch.cos(state[1]-state[2]), 1/3*self.m2*self.l2*self.l2]])
+                  [0.5*self.m2*self.l2*torch.cos(state[2]), 0.5*self.m2*self.l1*self.l2*torch.cos(state[1]-state[2]), 1/3*self.m2*self.l2*self.l2]], requires_grad=True)
         return D
     
     def calculateC(self,state):
         C = torch.tensor([[0, -(0.5*self.m1+self.m2)*self.l1*torch.sin(state[1])*state[4], -0.5*self.m2*self.l2*torch.sin(state[2])*state[5]],
                       [0, 0, 0.5*self.m2*self.l1*self.l2*torch.sin(state[1] - state[2])*state[5]],
-                      [0, -0.5*self.m2*self.l1*self.l2*torch.sin(state[1]-state[2])*state[4], 0]])
+                      [0, -0.5*self.m2*self.l1*self.l2*torch.sin(state[1]-state[2])*state[4], 0]], requires_grad=True)
         return C
     
     def calculateG(self,state):
         g = 9.8
         G = torch.tensor([[0],
                           [-0.5*(self.m1+self.m2)*self.l1*g*torch.sin(state[1])],
-                          [-0.5*self.m2*g*self.l2*torch.sin(state[2])]])
+                          [-0.5*self.m2*g*self.l2*torch.sin(state[2])]], requires_grad=True)
         return G
 
     def f(self, state, action):
         dt = 0.05
-        torch.zeros_like(state)
         D = self.calculateD(state)
         D_inv = D.inverse()
         C = self.calculateC(state)
