@@ -28,7 +28,7 @@ class motionModel():
                           [-0.5*self.m2*g*self.l2*torch.sin(state[2])]])
         return G
 
-    def motion(self, state, action):
+    def f(self, state, action):
         dt = 0.05
         torch.zeros_like(state)
         D = self.calculateD(state)
