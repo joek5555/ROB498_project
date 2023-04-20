@@ -14,6 +14,9 @@ class Cost():
 
     def l(self, state, goal_state, action=None):
         state = state.unsqueeze(1)
+        with torch.no_grad():
+            state[1] = self.wrapToPI(state[1])
+            state[2] = self.wrapToPI(state[2])
         goal_state = goal_state.unsqueeze(1)
         if (action == None):
             return torch.t(state-goal_state) @ self.Q @ (state - goal_state)
@@ -99,3 +102,11 @@ class Cost():
             l_uu.append(row)
         l_uu = torch.stack(l_uu)
         return l_uu
+    
+   
+    def wrapToPI(self, phase):
+        x_wrap = phase% (2 * torch.pi)
+        while abs(x_wrap) > torch.pi:
+            x_wrap -= 2 * torch.pi * (x_wrap/abs(x_wrap))
+        return x_wrap
+
