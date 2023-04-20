@@ -1,7 +1,7 @@
 import torch
 
 from equations_motion import motionModel
-from visualize import visualize
+from visualize import visualize_trajectory, visualize_state
 from cost import Cost
 from iLQR import iLQR
 from dynamics import Dynamics
@@ -17,7 +17,7 @@ length_arm2 = 1.0
 
 motion_model = motionModel(mass_cart, mass_arm1, mass_arm2, length_arm1, length_arm2)
 
-initial_state = torch.tensor([0, 3.14, 3.14, 0, 0, 0], requires_grad=True)
+initial_state = torch.tensor([0, 3.14, 3.14, 0, 0, 0])
 goal_state = torch.zeros((6))
 double_pend_dynamics = Dynamics(x_dim=6, u_dim=1, motion_model=motion_model)
 cost_fn = Cost()
@@ -39,4 +39,4 @@ for i in range(len(system_states)):
     system_states_np.append(system_states[i].detach().numpy())
 
 
-visualize(system_states_np, dt)
+visualize_trajectory(system_states_np, dt)
