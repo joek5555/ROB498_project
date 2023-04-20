@@ -4,22 +4,31 @@ class Cost():
         self.x_dim = 6
         self.u_dim = 1
         self.Q = torch.eye(self.x_dim)
-        self.Q[0,0] = 1.2
-        self.Q[1,1] = 15
-        self.Q[2,2] = 15
-        self.Q[3,3] = 1.4
-        self.Q[4,4] = 1.7
-        self.Q[5,5] = 1.7
+        self.Q[0,0] = 0.4
+        self.Q[1,1] = 1.1
+        self.Q[2,2] = 1.1
+        self.Q[3,3] = 0.01
+        self.Q[4,4] = 1.2
+        self.Q[5,5] = 1.2
+        self.Q_f = torch.eye(self.x_dim)
+        self.Q_f[0,0] = 0.4
+        self.Q_f[1,1] = 1.1
+        self.Q_f[2,2] = 1.1
+        self.Q_f[3,3] = 0.4
+        self.Q_f[4,4] = 1.2
+        self.Q_f[5,5] = 1.2
+        self.Q_f *= 5
         self.R = torch.eye(self.u_dim)
+        self.R[0,0] = 0.5
 
     def l(self, state, goal_state, action=None):
         state = state.unsqueeze(1)
-        with torch.no_grad():
-            state[1] = self.wrapToPI(state[1])
-            state[2] = self.wrapToPI(state[2])
+        # with torch.no_grad():
+        #     state[1] = self.wrapToPI(state[1])
+        #     state[2] = self.wrapToPI(state[2])
         goal_state = goal_state.unsqueeze(1)
         if (action == None):
-            return torch.t(state-goal_state) @ self.Q @ (state - goal_state)
+            return torch.t(state-goal_state) @ self.Q_f @ (state - goal_state)
         cost = torch.t(state-goal_state) @ self.Q @ (state - goal_state) + torch.t(action) @ self.R @ action
         return cost
     
