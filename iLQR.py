@@ -34,7 +34,7 @@ class iLQR():
             if (i % 10 == 0):
                 print("iteration: ", i)
 
-            # #reset regularization
+            # #reset regularizationz
             self.mu = 1.0
             self.delta = self.delta_0
 
@@ -74,7 +74,18 @@ class iLQR():
                 Q_xx = l_xx \
                         + torch.t(f_x) @ V_xx.squeeze(0) @ f_x \
                         + torch.tensordot(V_x, f_xx, dims=1)
-                
+                # #regularization
+                # if (Q_uu > 0):
+                #     self.delta = min(1/self.delta_0, self.delta/self.delta_0)
+                #     if (self.mu * self.delta > self.mu_min):
+                #         self.mu = self.mu * self.delta
+                #     else:
+                #         self.mu = 0
+                # else:     #non-PD Q_uu
+                #     self.delta = max(self.delta_0, self.delta * self.delta_0)
+                #     self.mu = max(self.mu_min, self.mu * self.delta)
+                #     t -= 1
+                #     continue          
 
                 k = -1 * torch.inverse(Q_uu) @ Q_u
                 K = -1 * torch.inverse(Q_uu) @ Q_ux
@@ -107,32 +118,19 @@ class iLQR():
                 X_hat[0,:] = X[0,:]
                 for j in range(self.num_steps):
                     x_diff = X_hat[j,:] - X[j,:]
-                    x_diff[1] = wrapToPI(x_diff[1])
-                    x_diff[2] = wrapToPI(x_diff[2])
+                    # x_diff[1] = wrapToPI(x_diff[1])
+                    # x_diff[2] = wrapToPI(x_diff[2])
                     U_hat[j,:] = U[j,:] + alpha*k_list[j] + K_list[j] @ (x_diff)
                     X_hat[j+1,:] = self.dynamics.f(X_hat[j,:], U_hat[j,:])
                 J_new = self.cost_fn.total_cost(X_hat, self.goal_state, U_hat)
                 if (J_new < J):
-                    if (torch.abs(J_new-J) < 0.1):
-                        #we are done, probably wont get much better
-                        print("done on iteration: ", i)
-                        converged=True
                     #accept this alpha
                     print("alpha: ", alpha)
                     break
-                
-                # #regularization
-                # if (Q_uu > 0):
-                #     self.delta = min(1/self.delta_0, self.delta/self.delta_0)
-                #     if (self.mu * self.delta > self.mu_min):
-                #         self.mu = self.mu * self.delta
-                #     else:
-                #         self.mu = 0
-                # else:
-                #     self.delta = max(self.delta_0, self.delta * self.delta_0)
-                #     self.mu = max(self.mu_min, self.mu * self.delta)
-                #     i -= 1
-                #     continue
+            if (J_new > J):
+                print("Cost: ", J.item())
+                print(X[-1,:])
+                return U
 
             # update states and actions
             J = J_new
