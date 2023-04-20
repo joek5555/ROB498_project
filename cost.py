@@ -4,8 +4,8 @@ class Cost():
         self.x_dim = 6
         self.u_dim = 1
         self.Q = torch.eye(self.x_dim)
-        self.Q[0,0] = 0.4
-        self.Q[1,1] = 1.1
+        self.Q[0,0] = 10.0
+        self.Q[1,1] = 10.0
         self.Q[2,2] = 1.1
         self.Q[3,3] = 0.01
         self.Q[4,4] = 1.2
@@ -19,7 +19,7 @@ class Cost():
         self.Q_f[5,5] = 1.2
         self.Q_f *= 5
         self.R = torch.eye(self.u_dim)
-        self.R[0,0] = 0.5
+        self.R[0,0] = 0.001
 
     def l(self, state, goal_state, action=None):
         state = state.unsqueeze(1)

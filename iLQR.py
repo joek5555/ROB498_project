@@ -17,7 +17,7 @@ class iLQR():
         self.mu = 1.0
         self.mu_min = 1e-6
         self.mu_max = 1e10
-        self.delta_0 = 2
+        self.delta_0 = 1.00
         self.delta = self.delta_0
         # state is defined by [x, theta1, theta2, x_dot, theta1_dot, theta2_dot]
     
@@ -27,12 +27,14 @@ class iLQR():
         #rollout the dynamics
         x_0 = self.state_0
         X = self.dynamics.rollout(x_0, U)
+        for i in range(X.shape[0]):
+            X[i,:][1] = wrapToPI(X[i,:][1])
+            X[i,:][2] = wrapToPI(X[i,:][2])
         J = self.cost_fn.total_cost(X, self.goal_state, U)
         print("first cost:", J.item())
 
         for i in range(self.max_iter):
-            if (i % 10 == 0):
-                print("iteration: ", i)
+            print("iteration: ", i)
 
             # #reset regularizationz
             self.mu = 1.0
@@ -47,7 +49,8 @@ class iLQR():
             # start at end and work backwards
             k_list = []
             K_list = []
-            for t in range(self.num_steps-1, -1, -1):
+            t = self.num_steps-1
+            while(t>=0):
                 x_t = X[t,:].clone().detach().requires_grad_(True)
                 u_t = U[t,:].clone().detach().requires_grad_(True)
 
@@ -74,18 +77,23 @@ class iLQR():
                 Q_xx = l_xx \
                         + torch.t(f_x) @ V_xx.squeeze(0) @ f_x \
                         + torch.tensordot(V_x, f_xx, dims=1)
-                # #regularization
-                # if (Q_uu > 0):
-                #     self.delta = min(1/self.delta_0, self.delta/self.delta_0)
-                #     if (self.mu * self.delta > self.mu_min):
-                #         self.mu = self.mu * self.delta
-                #     else:
-                #         self.mu = 0
-                # else:     #non-PD Q_uu
-                #     self.delta = max(self.delta_0, self.delta * self.delta_0)
-                #     self.mu = max(self.mu_min, self.mu * self.delta)
-                #     t -= 1
-                #     continue          
+
+                # regularization
+                if (Q_uu > 0):
+                    self.delta = min(1/self.delta_0, self.delta/self.delta_0)
+                    if (self.mu * self.delta > self.mu_min):
+                        self.mu = self.mu * self.delta
+                    else:
+                        self.mu = 0
+                    if (self.mu> self.mu_max):
+                        print("exceeded max regularization term")
+                        break
+                else:     #non-PD Q_uu
+                    print("non PD Q")
+                    self.delta = max(self.delta_0, self.delta * self.delta_0)
+                    self.mu = max(self.mu_min, self.mu * self.delta)
+                    continue
+                t -= 1
 
                 k = -1 * torch.inverse(Q_uu) @ Q_u
                 K = -1 * torch.inverse(Q_uu) @ Q_ux
@@ -110,34 +118,41 @@ class iLQR():
             U_hat = torch.zeros_like(U)
             X_hat[0,:] = X[0,:]
             J_new = None
-            alphas = 1.1**(-np.arange(10)**2)
+            alphas = 1.1**(-np.arange(11)**2)
             converged = False
             for alpha in alphas:
                 X_hat = torch.zeros_like(X)
                 U_hat = torch.zeros_like(U)
                 X_hat[0,:] = X[0,:]
                 for j in range(self.num_steps):
-                    x_diff = X_hat[j,:] - X[j,:]
-                    # x_diff[1] = wrapToPI(x_diff[1])
-                    # x_diff[2] = wrapToPI(x_diff[2])
-                    U_hat[j,:] = U[j,:] + alpha*k_list[j] + K_list[j] @ (x_diff)
+                    U_hat[j,:] = U[j,:] + alpha*k_list[j] + K_list[j] @ (X_hat[j,:] - X[j,:])
                     X_hat[j+1,:] = self.dynamics.f(X_hat[j,:], U_hat[j,:])
+                    X_hat[j+1,:][1] = wrapToPI(X_hat[j+1,:][1])
+                    X_hat[j+1,:][2] = wrapToPI(X_hat[j+1,:][2])
                 J_new = self.cost_fn.total_cost(X_hat, self.goal_state, U_hat)
                 if (J_new < J):
                     #accept this alpha
-                    print("alpha: ", alpha)
                     break
-            if (J_new > J):
+            if (J_new > J or math.isnan(J_new)):
                 print("Cost: ", J.item())
-                print(X[-1,:])
+                # print(X[-1,:])
+                self.mu = 1.0
+                self.mu_min = 1e-6
+                self.mu_max = 1e10
+                self.delta_0 = 1.00
+                self.delta = self.delta_0
                 return U
 
             # update states and actions
             J = J_new
             print("Cost: ", J.item())
-            print(X_hat[-1,:])
             U = U_hat
             X = X_hat
+            self.mu = 1.0
+            self.mu_min = 1e-6
+            self.mu_max = 1e10
+            self.delta_0 = 1.00
+            self.delta = self.delta_0
         return U
 
 def wrapToPI(phase):
