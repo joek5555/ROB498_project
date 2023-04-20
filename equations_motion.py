@@ -1,8 +1,8 @@
 import torch
 
 
-class motion_model():
-    def _init_(self, mass_cart, mass_arm1, mass_arm2, length_arm1, length_arm2):
+class motionModel():
+    def __init__(self, mass_cart, mass_arm1, mass_arm2, length_arm1, length_arm2):
         self.m0 = mass_cart
         self.m1 = mass_arm1
         self.m2 = mass_arm2
@@ -26,21 +26,32 @@ class motion_model():
         G = torch.tensor([[0],
                           [-0.5*(self.m1+self.m2)*self.l1*g*torch.sin(state[1])],
                           [-0.5*self.m2*g*self.l2*torch.sin(state[2])]])
+        return G
 
     def motion(self, state, action):
+        dt = 0.05
         torch.zeros_like(state)
         D = self.calculateD(state)
         D_inv = D.inverse()
         C = self.calculateC(state)
         G = self.calculateG(state)
-        H = torch.tensor([[1],[0],[0]])
+        H = torch.tensor([[1.0],[0.0],[0.0]])
 
         A_zeros = torch.zeros([6,3])
         A_values = torch.cat([torch.eye(3), torch.matmul(-D_inv, C)], dim=0)
         A = torch.cat([A_zeros, A_values], dim=1)
-        B = torch.cat([torch.zeros([3,3]), torch.matmul(D_inv, H)], dim=0)
-        L = torch.cat([torch.zeros([3,3]), torch.matmul(-D_inv, G)], dim=0)
+        #print(torch.matmul(D_inv, H))
+        #print(torch.zeros([3,3]))
+        B = torch.cat([torch.zeros([3]), torch.matmul(D_inv, H).squeeze()], dim=0)
+        L = torch.cat([torch.zeros([3]), torch.matmul(-D_inv, G).squeeze()], dim=0)
 
-        state_dot = torch.matmul(A, state) + torch.matmul(B, action) + L
-        return state_dot
+        #print(torch.matmul(A, state).shape)
+        #print((B * action).shape)
+        #print(L.shape)
+        state_dot = torch.matmul(A, state) + B * action + L
+        #print(state_dot.shape)
+        next_state = state + state_dot * dt
+        #print(next_state.shape)
+
+        return next_state
     
