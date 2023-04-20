@@ -13,26 +13,37 @@ class iLQR():
         self.state_0 = state_0
         self.dynamics = dynamics
         self.cost_fn = cost_fn
+        self.mu = 1.0
+        self.mu_min = 1e-6
+        self.mu_max = 1e10
+        self.delta_0 = 2.0
+        self.delta = self.delta_0
         # state is defined by [x, theta1, theta2, x_dot, theta1_dot, theta2_dot]
     
 
     def ilqr(self):
-        U = torch.rand((self.num_steps, self.u_dim), requires_grad=True)   #initialize random actions
+        U = torch.rand((self.num_steps, self.u_dim))   #initialize random actions
         #rollout the dynamics
         x_0 = self.state_0
         X = self.dynamics.rollout(x_0, U)
+        J = self.cost_fn.total_cost(X, self.goal_state, U)
+        print(J)
 
         for i in range(self.max_iter):
             if (i % 10 == 0):
                 print("iteration: ", i)
+
+            #reset regularization
+            self.mu = 1.0
+            self.delta = self.delta_0
+
             # backwards pass
             x_f = X[-1,:].clone().detach().requires_grad_(True)
-            V = self.cost_fn.l(x_f, self.goal_state)
+
             V_x = self.cost_fn.l_x(x_f, self.goal_state)
             V_xx = self.cost_fn.l_xx(x_f, self.goal_state)
 
             # start at end and work backwards
-            mu = 1.0  # regularization parameter
             alpha = 1.0
             k_list = []
             K_list = []
@@ -52,10 +63,10 @@ class iLQR():
                 l_ux = self.cost_fn.l_ux(x_t, self.goal_state, u_t)
                 l_xx = self.cost_fn.l_xx(x_t, self.goal_state, u_t)
                 Q_uu =  l_uu \
-                        + torch.t(f_u) @ (V_xx.squeeze(0) + mu*I) @ f_u \
+                        + torch.t(f_u) @ (V_xx.squeeze(0) + self.mu*I) @ f_u \
                         + torch.dot(V_x.squeeze(0), f_uu.squeeze(-1).squeeze(-1))
                 Q_ux = l_ux \
-                        + torch.t(f_u) @ (V_xx.squeeze(0) + mu*I) \
+                        + torch.t(f_u) @ (V_xx.squeeze(0) + self.mu*I) \
                         + torch.tensordot(V_x, f_ux)
                 Q_u = l_u \
                         + torch.t(f_u) @ torch.t(V_x)
@@ -67,7 +78,7 @@ class iLQR():
 
                 k = -1 * torch.inverse(Q_uu) @ Q_u
                 K = -1 * torch.inverse(Q_uu) @ Q_ux
-                K = K.squeeze(-0)
+                K = K.squeeze(0)
                 k_list.insert(0, k)
                 K_list.insert(0, K)
 
@@ -87,9 +98,26 @@ class iLQR():
             X_hat = torch.zeros_like(X)
             U_hat = torch.zeros_like(U)
             X_hat[0,:] = X[0,:]
+            cost = 0
             for j in range(self.num_steps):
                 U_hat[j,:] = U[j,:] + alpha*k_list[j] + K_list[j] @ (X_hat[j,:] + X[j,:])
                 X_hat[j+1,:] = self.dynamics.f(X_hat[j,:], U_hat[j,:])
+                cost += self.cost_fn.l(X_hat[j,:], self.goal_state, U_hat[j,:])
+            
+            #regularization
+            J_new = self.cost_fn.total_cost(X_hat, self.goal_state, U_hat)
+            print(J_new)
+            if (J_new < J):
+                self.delta = min(1/self.delta_0, self.delta/self.delta_0)
+                if (self.mu * self.delta > self.mu_min):
+                    self.mu = self.mu * self.delta
+                else:
+                    self.mu = 0
+            else:
+                self.delta = max(self.delta_0, self.delta * self.delta_0)
+                self.mu = max(self.mu_min, self.mu * self.delta)
+
+            # update states and actions
             U = U_hat
             X = X_hat
         return U
