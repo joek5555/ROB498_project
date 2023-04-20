@@ -9,9 +9,9 @@ from dynamics import Dynamics
 dt = 0.05
 runtime = 10 # in seconds
 
-mass_arm1 = 84.01 # (l=1, r=0.1) * 2710 
-mass_arm2 = 84.01 # (l=1, r=0.1) * 2710
-mass_cart = 169.375 # (1 * 0.25 * 0.25 ) * 2710
+mass_arm1 = 0.5 # (l=1, r=0.1) * 2710 
+mass_arm2 = 0.5 # (l=1, r=0.1) * 2710
+mass_cart = 1.0 # (1 * 0.25 * 0.25 ) * 2710
 length_arm1 = 1.0
 length_arm2 = 1.0
 
@@ -23,7 +23,6 @@ double_pend_dynamics = Dynamics(x_dim=6, u_dim=1, motion_model=motion_model)
 cost_fn = Cost()
 controller = iLQR(double_pend_dynamics, cost_fn, initial_state, goal_state)
 U = controller.ilqr()
-
 system_states = []
 system_states.append(initial_state)
 

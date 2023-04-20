@@ -4,7 +4,7 @@ from dynamics import Dynamics
 from cost import Cost
 
 class iLQR():
-    def __init__(self, dynamics, cost_fn, state_0, goal_state, num_steps=50, max_iter=100):
+    def __init__(self, dynamics, cost_fn, state_0, goal_state, num_steps=60, max_iter=100):
         self.num_steps = num_steps
         self.max_iter = max_iter
         self.goal_state = goal_state

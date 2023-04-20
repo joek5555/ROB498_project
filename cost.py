@@ -5,8 +5,8 @@ class Cost():
         self.u_dim = 1
         self.Q = torch.eye(self.x_dim)
         self.Q[0,0] = 1.2
-        self.Q[1,1] = 2
-        self.Q[2,2] = 2
+        self.Q[1,1] = 15
+        self.Q[2,2] = 15
         self.Q[3,3] = 1.4
         self.Q[4,4] = 1.7
         self.Q[5,5] = 1.7
@@ -23,6 +23,13 @@ class Cost():
         cost = torch.t(state-goal_state) @ self.Q @ (state - goal_state) + torch.t(action) @ self.R @ action
         return cost
     
+    def total_cost(self, X, goal_state, U):
+        cost = 0
+        for i in range(U.shape[0]):
+            cost += self.l(X[i,:], goal_state, U[i,:])
+        cost += self.l(X[-1,:], goal_state)
+        return cost
+
     def l_x(self, x, x_goal, u=None):    #make sure to pass in x and u as tensor with requires_grad = True
         l = self.l(x, x_goal, u)
         grad = []
@@ -109,4 +116,3 @@ class Cost():
         while abs(x_wrap) > torch.pi:
             x_wrap -= 2 * torch.pi * (x_wrap/abs(x_wrap))
         return x_wrap
-
