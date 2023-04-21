@@ -4,7 +4,7 @@ class Cost():
         self.x_dim = 6
         self.u_dim = 1
         self.Q = torch.eye(self.x_dim)
-        self.Q[0,0] = 10.0
+        self.Q[0,0] = 45.0
         self.Q[1,1] = 100.0
         self.Q[2,2] = 100.0
         self.Q[3,3] = 2.0

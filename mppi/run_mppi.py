@@ -23,7 +23,7 @@ motion_model = motionModel(mass_cart, mass_arm1, mass_arm2, length_arm1, length_
 cost_class = Cost()
 
 num_steps = 100
-horizon = 30
+horizon = 40
 x_dim = 6
 u_dim = 1
 noise_sigma = torch.tensor([0.5])
@@ -41,6 +41,7 @@ for i in range(num_steps):
     action = mppi_controller.control(system_states[-1])
     next_state = motion_model.f(system_states[-1], action)
     system_states.append(next_state)
+    print(next_state)
     
 system_states_np = []
 for i in range(len(system_states)):
