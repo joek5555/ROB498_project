@@ -1,7 +1,7 @@
 import torch
 import os
 import sys
-from visualize import visualize
+from visualize import visualize, plotter
 
 #path_to_files = os.path.realpath(os.path.join(os.path.dirname(__file__), 'mppi'))
 
@@ -19,11 +19,12 @@ mass_cart = 1.0 # (1 * 0.25 * 0.25 ) * 2710
 length_arm1 = 1.0
 length_arm2 = 1.0
 
+true_motion_model = motionModel(mass_cart + 0.1, mass_arm1+0.05, mass_arm2+0.05, length_arm1+0.1, length_arm2+0.1)
 motion_model = motionModel(mass_cart, mass_arm1, mass_arm2, length_arm1, length_arm2)
 cost_class = Cost()
 
 num_steps = 100
-horizon = 40
+horizon = 35
 x_dim = 6
 u_dim = 1
 noise_sigma = torch.tensor([0.5])
@@ -40,6 +41,7 @@ for i in range(num_steps):
     print(f'-------iteration {i}----------')
     action = mppi_controller.control(system_states[-1])
     next_state = motion_model.f(system_states[-1], action)
+    #next_state = true_motion_model.f(system_states[-1], action)
     system_states.append(next_state)
     print(next_state)
     
@@ -51,3 +53,5 @@ for i in range(len(system_states)):
 
 
 visualize(system_states_np, dt)
+
+plotter(system_states_np, dt, label = "mppi")
