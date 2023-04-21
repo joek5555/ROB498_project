@@ -21,16 +21,21 @@ initial_state = torch.tensor([0, 3.14, 3.14, 0, 0, 0], requires_grad=True)
 goal_state = torch.zeros((6))
 double_pend_dynamics = Dynamics(x_dim=6, u_dim=1, motion_model=motion_model)
 cost_fn = Cost()
-controller = iLQR(double_pend_dynamics, cost_fn, initial_state, goal_state, num_steps=10)
+num_steps = 30
+controller = iLQR(double_pend_dynamics, cost_fn, initial_state, goal_state, num_steps=num_steps)
 system_states = []
 system_states.append(initial_state)
 
+U = 20*torch.rand((num_steps, 1))-10   #initialize random actions
 for i in range(100):
+    print(i)
     action = 0
     current_state = system_states[-1]
-
-    next_state = motion_model.f(current_state, controller.ilqr()[0,:])
-    #print(next_state)
+    U = controller.ilqr(current_state, U)
+    next_state = motion_model.f(current_state, U[0,:])
+    U_next = torch.zeros_like(U)
+    U_next[0:num_steps-1,:] = U[1:num_steps,:]
+    U = U_next
     system_states.append(next_state)
 
 system_states_np = []

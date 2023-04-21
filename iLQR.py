@@ -22,10 +22,9 @@ class iLQR():
         # state is defined by [x, theta1, theta2, x_dot, theta1_dot, theta2_dot]
     
 
-    def ilqr(self):
-        U = 20*torch.rand((self.num_steps, self.u_dim))-10   #initialize random actions
+    def ilqr(self, x_0, U):
+        # U = 20*torch.rand((self.num_steps, self.u_dim))-10   #initialize random actions
         #rollout the dynamics
-        x_0 = self.state_0
         X = self.dynamics.rollout(x_0, U)
         for i in range(X.shape[0]):
             X[i,:][1] = wrapToPI(X[i,:][1])
@@ -34,11 +33,11 @@ class iLQR():
         print("first cost:", J.item())
 
         for i in range(self.max_iter):
-            print("iteration: ", i)
+            # print("iteration: ", i)
 
-            # #reset regularizationz
-            self.mu = 1.0
-            self.delta = self.delta_0
+            # #reset regularization
+            # self.mu = 1.0
+            # self.delta = self.delta_0
 
             # backwards pass
             x_f = X[-1,:].clone().detach().requires_grad_(True)
@@ -133,26 +132,27 @@ class iLQR():
                 if (J_new < J):
                     #accept this alpha
                     break
-            if (J_new > J or math.isnan(J_new)):
-                print("Cost: ", J.item())
+            if (J_new > J or math.isnan(J_new) or (torch.abs(J_new-J) < 0.0001)):
+                # print("Cost: ", J.item())
                 # print(X[-1,:])
                 self.mu = 1.0
                 self.mu_min = 1e-6
                 self.mu_max = 1e10
                 self.delta_0 = 1.00
                 self.delta = self.delta_0
+                print("Final Cost: ", J.item())
                 return U
 
             # update states and actions
             J = J_new
-            print("Cost: ", J.item())
             U = U_hat
             X = X_hat
-            self.mu = 1.0
-            self.mu_min = 1e-6
-            self.mu_max = 1e10
-            self.delta_0 = 1.00
-            self.delta = self.delta_0
+        self.mu = 1.0
+        self.mu_min = 1e-6
+        self.mu_max = 1e10
+        self.delta_0 = 1.00
+        self.delta = self.delta_0
+        print("Final Cost: ", J.item())
         return U
 
 def wrapToPI(phase):
