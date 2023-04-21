@@ -17,7 +17,7 @@ class iLQR():
         self.mu = 1.0
         self.mu_min = 1e-6
         self.mu_max = 1e10
-        self.delta_0 = 1.00
+        self.delta_0 = 2.0
         self.delta = self.delta_0
         # state is defined by [x, theta1, theta2, x_dot, theta1_dot, theta2_dot]
     
@@ -36,8 +36,8 @@ class iLQR():
             # print("iteration: ", i)
 
             # #reset regularization
-            # self.mu = 1.0
-            # self.delta = self.delta_0
+            self.mu = 1.0
+            self.delta = self.delta_0
 
             # backwards pass
             x_f = X[-1,:].clone().detach().requires_grad_(True)
@@ -91,6 +91,8 @@ class iLQR():
                     print("non PD Q")
                     self.delta = max(self.delta_0, self.delta * self.delta_0)
                     self.mu = max(self.mu_min, self.mu * self.delta)
+                    print("mu", self.mu)
+                    print("delta", self.delta)
                     continue
                 t -= 1
 
@@ -138,7 +140,7 @@ class iLQR():
                 self.mu = 1.0
                 self.mu_min = 1e-6
                 self.mu_max = 1e10
-                self.delta_0 = 1.00
+                self.delta_0 = 2.0
                 self.delta = self.delta_0
                 print("Final Cost: ", J.item())
                 return U
@@ -150,7 +152,7 @@ class iLQR():
         self.mu = 1.0
         self.mu_min = 1e-6
         self.mu_max = 1e10
-        self.delta_0 = 1.00
+        self.delta_0 = 2.0
         self.delta = self.delta_0
         print("Final Cost: ", J.item())
         return U

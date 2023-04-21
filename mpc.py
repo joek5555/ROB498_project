@@ -17,17 +17,17 @@ length_arm2 = 1.0
 
 motion_model = motionModel(mass_cart, mass_arm1, mass_arm2, length_arm1, length_arm2)
 
-initial_state = torch.tensor([0, 3.14, 3.14, 0, 0, 0], requires_grad=True)
+initial_state = torch.tensor([0.0, 0.05, -0.05, 0.0, 0.0, 0.0], requires_grad=True)
 goal_state = torch.zeros((6))
 double_pend_dynamics = Dynamics(x_dim=6, u_dim=1, motion_model=motion_model)
 cost_fn = Cost()
-num_steps = 30
+num_steps = 25
 controller = iLQR(double_pend_dynamics, cost_fn, initial_state, goal_state, num_steps=num_steps)
 system_states = []
 system_states.append(initial_state)
 
 U = 20*torch.rand((num_steps, 1))-10   #initialize random actions
-for i in range(100):
+for i in range(150):
     print(i)
     action = 0
     current_state = system_states[-1]
@@ -37,7 +37,7 @@ for i in range(100):
     U_next[0:num_steps-1,:] = U[1:num_steps,:]
     U = U_next
     system_states.append(next_state)
-
+print(U)
 system_states_np = []
 for i in range(len(system_states)):
     system_states_np.append(system_states[i].detach().numpy())
