@@ -41,7 +41,7 @@ def plotter(states, goal, dt):
     states_np = np.array(states)
     goal = np.tile(goal, (states_np.shape[0],1))
     state_mse = np.square(states_np-goal)
-    time = np.arange(0, states_np.shape[0]*dt, dt)
+    time = np.linspace(0, states_np.shape[0]*dt-dt, states_np.shape[0])
 
     fig, ax = plt.subplots(3,2)
     fig.tight_layout(h_pad=2)
@@ -67,7 +67,7 @@ def plotter_mppi(states, goal, dt):
     states_np = np.array(states)
     goal = np.tile(goal, (states_np.shape[0],1))
     state_mse = np.square(states_np-goal)
-    time = np.arange(0, states_np.shape[0]*dt-dt, dt)
+    time = np.linspace(0, states_np.shape[0]*dt-dt, states_np.shape[0])
 
     fig, ax = plt.subplots(3,2)
     fig.tight_layout(h_pad=2)

@@ -76,6 +76,8 @@ if controller_type == "iLQR" or controller_type == "DDP":
         if U == "ERROR":
             i =0
             U = 20*torch.rand((horizon, 1))-10   #initialize random actions
+            system_states.clear()
+            system_states.append(initial_state)
             continue
         next_state = motion_model.f(current_state, U[0,:])
         U_next = torch.zeros_like(U)
