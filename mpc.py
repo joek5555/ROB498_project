@@ -1,23 +1,29 @@
 import torch
 
 from equations_motion import motionModel
-from visualize import visualize
+from visualize import visualize, plotter
 from cost import Cost
 from iLQR import iLQR
 from dynamics import Dynamics
 
-dt = 0.05
-runtime = 10 # in seconds
+def wrapToPI(phase):
+    x_wrap = phase% (2 * torch.pi)
+    while abs(x_wrap) > torch.pi:
+        x_wrap -= 2 * torch.pi * (x_wrap/abs(x_wrap))
+    return x_wrap
 
-mass_arm1 = 0.5 # (l=1, r=0.1) * 2710 
-mass_arm2 = 0.5 # (l=1, r=0.1) * 2710
-mass_cart = 1.0 # (1 * 0.25 * 0.25 ) * 2710
+
+
+dt = 0.05
+mass_arm1 = 0.5 
+mass_arm2 = 0.5 
+mass_cart = 1.0 
 length_arm1 = 1.0
 length_arm2 = 1.0
 
 motion_model = motionModel(mass_cart, mass_arm1, mass_arm2, length_arm1, length_arm2)
 
-initial_state = torch.tensor([0.0, 0.05, -0.05, 0.0, 0.0, 0.0], requires_grad=True)
+initial_state = torch.tensor([0.0, 3.14, 3.14, 0.0, 0.0, 0.0], requires_grad=True)
 goal_state = torch.zeros((6))
 double_pend_dynamics = Dynamics(x_dim=6, u_dim=1, motion_model=motion_model)
 cost_fn = Cost()
@@ -40,7 +46,12 @@ for i in range(150):
 print(U)
 system_states_np = []
 for i in range(len(system_states)):
-    system_states_np.append(system_states[i].detach().numpy())
+    state_np = system_states[i].detach().numpy()
+    state_np[1] = wrapToPI(state_np[1])
+    state_np[2] = wrapToPI(state_np[2])
+    system_states_np.append(state_np)
 
 
-visualize(system_states_np, dt)
+visualize(system_states_np, length_arm1, length_arm2, dt)
+
+plotter(system_states_np, goal_state.numpy(), dt)

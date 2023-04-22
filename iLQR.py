@@ -30,7 +30,7 @@ class iLQR():
             X[i,:][1] = wrapToPI(X[i,:][1])
             X[i,:][2] = wrapToPI(X[i,:][2])
         J = self.cost_fn.total_cost(X, self.goal_state, U)
-        print("first cost:", J.item())
+        #print("first cost:", J.item())
 
         for i in range(self.max_iter):
             # print("iteration: ", i)
@@ -56,9 +56,9 @@ class iLQR():
                 I = torch.eye(self.x_dim)
                 f_x = self.dynamics.f_x(x_t, u_t)
                 f_u = self.dynamics.f_u(x_t, u_t)
-                f_xx = self.dynamics.f_xx(x_t, u_t)
-                f_ux = self.dynamics.f_ux(x_t, u_t)
-                f_uu = self.dynamics.f_uu(x_t, u_t)
+                #f_xx = self.dynamics.f_xx(x_t, u_t)
+                #f_ux = self.dynamics.f_ux(x_t, u_t)
+                #f_uu = self.dynamics.f_uu(x_t, u_t)
                 l_x = self.cost_fn.l_x(x_t, self.goal_state, u_t)
                 l_u = self.cost_fn.l_u(x_t, self.goal_state, u_t)
                 l_uu = self.cost_fn.l_uu(x_t, self.goal_state, u_t).squeeze().squeeze()
@@ -66,16 +66,16 @@ class iLQR():
                 l_xx = self.cost_fn.l_xx(x_t, self.goal_state, u_t)
                 Q_uu =  l_uu \
                         + torch.t(f_u) @ (V_xx.squeeze(0) + self.mu*I) @ f_u \
-                        + torch.dot(V_x.squeeze(0), f_uu.squeeze(-1).squeeze(-1))
+                        #+ torch.dot(V_x.squeeze(0), f_uu.squeeze(-1).squeeze(-1))
                 Q_ux = l_ux \
                         + torch.t(f_u) @ (V_xx.squeeze(0) + self.mu*I) @ f_x \
-                        + torch.tensordot(V_x, f_ux)
+                        #+ torch.tensordot(V_x, f_ux)
                 Q_u = l_u \
                         + torch.t(f_u) @ torch.t(V_x)
                 Q_x = torch.t(l_x) + torch.t(f_x) @ torch.t(V_x)
                 Q_xx = l_xx \
                         + torch.t(f_x) @ V_xx.squeeze(0) @ f_x \
-                        + torch.tensordot(V_x, f_xx, dims=1)
+                        #+ torch.tensordot(V_x, f_xx, dims=1)
 
                 # regularization
                 if (Q_uu > 0):
@@ -85,14 +85,16 @@ class iLQR():
                     else:
                         self.mu = 0
                     if (self.mu> self.mu_max):
-                        print("exceeded max regularization term")
+                        print("ERROR: exceeded max regularization term")
+                        self.mu = self.mu_max
                         break
                 else:     #non-PD Q_uu
-                    print("non PD Q")
+                    print("ERROR: non PD Q")
                     self.delta = max(self.delta_0, self.delta * self.delta_0)
                     self.mu = max(self.mu_min, self.mu * self.delta)
-                    print("mu", self.mu)
-                    print("delta", self.delta)
+                    #print("mu", self.mu)
+                    #print("delta", self.delta)
+                    t= self.num_steps-1
                     continue
                 t -= 1
 
@@ -142,7 +144,7 @@ class iLQR():
                 self.mu_max = 1e10
                 self.delta_0 = 2.0
                 self.delta = self.delta_0
-                print("Final Cost: ", J.item())
+                #print("Final Cost: ", J.item())
                 return U
 
             # update states and actions
@@ -154,7 +156,7 @@ class iLQR():
         self.mu_max = 1e10
         self.delta_0 = 2.0
         self.delta = self.delta_0
-        print("Final Cost: ", J.item())
+        #print("Final Cost: ", J.item())
         return U
 
 def wrapToPI(phase):

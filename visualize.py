@@ -1,25 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
+import os
 
 from celluloid import Camera
 
-arm1_l = 1.0
-arm2_l = 1.0
+# creates video of test run
+def visualize(states, arm1_l, arm2_l,dt):
 
-"""
-def get_path_to_saved_images():
-    path_to_images = os.path.realpath(os.path.join(os.path.dirname(__file__), 'saved_images'))
-
-    if not os.path.exists(path_to_images):
-       os.mkdir(path_to_images)
-
-    return path_to_images
-"""
-
-def visualize(states,dt):
-    i = 0.0
-    frames = []
     fig, ax = plt.subplots()
     camera = Camera(fig)
     for state in states:
@@ -36,19 +24,50 @@ def visualize(states,dt):
 
         ax.plot((arm1_x_endpoint, arm2_x_endpoint), (arm1_y_endpoint, arm2_y_endpoint), lw=1.5, c='r')
         camera.snap()
-        #image_path = get_path_to_saved_images()
-        #plt.savefig(f'{image_path}/state_t_{round(i,1)}.png')
-        #frames.append(imageio.imread(f'{image_path}/state_t_{round(i,1)}.png'))
-        i += dt
+
         
     animation = camera.animate(interval = dt)
     animation.save('output.gif')
     
-    #imageio.mimsave('animation.gif', frames, fps=dt)
 
-#states = np.vstack([np.arange(0,6,0.2), np.arange(0,3,0.1), np.arange(0,6,0.2)]).T
-#state = states.tolist()
 
-#state = [np.array([0,0,0]), np.array([0.1,0,0]), np.array([0.2,0,0]), np.array([0.3,0,0]), np.array([0.4,0,0])]
-#visualize(state, dt=0.1)
+# creates plot of MSE Error over time
+def plotter(states, goal, dt):
+    states_np = np.array(states)
+    print(states_np)
+    goal = np.tile(goal, (states_np.shape[0],1))
+    state_mse = np.square(states_np-goal)
+    time = np.arange(0, states_np.shape[0]*dt, dt)
+
+    fig, ax = plt.subplots(3,2)
+    fig.tight_layout(h_pad=2)
+
+    ax[0,0].plot(time,state_mse[:,0])
+    ax[0,0].title.set_text("cart position MSE vs time")
+    ax[1,0].plot(time,state_mse[:,1])
+    ax[1,0].title.set_text("theta 1 MSE vs time")
+    ax[2,0].plot(time,state_mse[:,2])
+    ax[2,0].title.set_text("theta 2 MSE vs time")
+    ax[0,1].plot(time,state_mse[:,3])
+    ax[0,1].title.set_text("cart velocity MSE vs time")
+    ax[1,1].plot(time,state_mse[:,4])
+    ax[1,1].title.set_text("theta 1 velocity MSE vs time")
+    ax[2,1].plot(time,state_mse[:,5])
+    ax[2,1].title.set_text("theta 2 veolicty MSE vs time")
+    plt.savefig(f"{get_path_to_saved_images()}/MSE_error.png")
+    plt.show()
+    plt.close()
+
+
+
+
+
+
+def get_path_to_saved_images():
+    path_to_images = os.path.realpath(os.path.join(os.path.dirname(__file__), 'saved_images'))
+
+    if not os.path.exists(path_to_images):
+       os.mkdir(path_to_images)
+
+    return path_to_images
 

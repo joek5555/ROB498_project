@@ -4,11 +4,11 @@ class Cost():
         self.x_dim = 6
         self.u_dim = 1
         self.Q = torch.eye(self.x_dim)
-        self.Q[0,0] = 10.0
+        self.Q[0,0] = 1.0
         self.Q[1,1] = 100.0
         self.Q[2,2] = 100.0
-        self.Q[3,3] = 2.0
-        self.Q[4,4] = 6.0
+        self.Q[3,3] = 1.0
+        self.Q[4,4] = 1.0
         self.Q[5,5] = 0.1
         # best
         # self.Q[0,0] = 10.0
@@ -17,7 +17,7 @@ class Cost():
         # self.Q[3,3] = 0.2
         # self.Q[4,4] = 0.2
         # self.Q[5,5] = 0.1
-        self.Q_f = 1000*torch.eye(self.x_dim)
+        self.Q_f = 1000*self.Q
         self.R = torch.eye(self.u_dim)
         self.R[0,0] = 0.001
         # best
