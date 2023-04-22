@@ -87,7 +87,7 @@ class iLQR():
                     if (self.mu> self.mu_max):
                         print("ERROR: exceeded max regularization term")
                         self.mu = self.mu_max
-                        break
+
                 else:     #non-PD Q_uu
                     print("ERROR: non PD Q")
                     self.delta = max(self.delta_0, self.delta * self.delta_0)

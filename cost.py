@@ -1,6 +1,7 @@
 import torch
 class Cost():
     def __init__(self):
+        # cost for iLQR, DDP
         self.x_dim = 6
         self.u_dim = 1
         self.Q = torch.eye(self.x_dim)
@@ -10,18 +11,26 @@ class Cost():
         self.Q[3,3] = 1.0
         self.Q[4,4] = 1.0
         self.Q[5,5] = 0.1
-        # best
-        # self.Q[0,0] = 10.0
-        # self.Q[1,1] = 12.0
-        # self.Q[2,2] = 15.0
-        # self.Q[3,3] = 0.2
-        # self.Q[4,4] = 0.2
-        # self.Q[5,5] = 0.1
         self.Q_f = 1000*self.Q
         self.R = torch.eye(self.u_dim)
         self.R[0,0] = 0.001
-        # best
-        # self.R[0,0] = 0.001
+        
+        # cost for MPPI
+        self.Q_mppi = torch.eye(self.x_dim)
+        self.Q_mppi[0,0] = 55.0
+        self.Q_mppi[1,1] = 150.0
+        self.Q_mppi[2,2] = 150.0
+        self.Q_mppi[3,3] = 2.0
+        self.Q_mppi[4,4] = 6.0
+        self.Q_mppi[5,5] = 0.01
+
+
+    def cost_batch_mppi(self, state, action):
+        goal_state = torch.tensor([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+        state_diff = state - torch.tile(goal_state.reshape(1,-1), (state.shape[0], 1))
+        cost = torch.diagonal(state_diff @ self.Q_mppi @ state_diff.T) + (torch.square(action) * self.R[0,0]).squeeze() 
+        return cost
+    
 
     def l(self, state, goal_state, action=None):
         state = state.unsqueeze(1)
