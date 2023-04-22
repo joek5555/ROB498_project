@@ -27,17 +27,43 @@ def visualize(states, arm1_l, arm2_l,dt):
 
         
     animation = camera.animate(interval = dt)
-    animation.save('output.gif')
+    animation.save(f'{get_path_to_saved_images()}/output.gif')
+    ax.set_title("Final State")
     
 
 
 # creates plot of MSE Error over time
 def plotter(states, goal, dt):
     states_np = np.array(states)
-    print(states_np)
     goal = np.tile(goal, (states_np.shape[0],1))
     state_mse = np.square(states_np-goal)
     time = np.arange(0, states_np.shape[0]*dt, dt)
+
+    fig, ax = plt.subplots(3,2)
+    fig.tight_layout(h_pad=2)
+
+    ax[0,0].plot(time,state_mse[:,0])
+    ax[0,0].title.set_text("cart position MSE vs time")
+    ax[1,0].plot(time,state_mse[:,1])
+    ax[1,0].title.set_text("theta 1 MSE vs time")
+    ax[2,0].plot(time,state_mse[:,2])
+    ax[2,0].title.set_text("theta 2 MSE vs time")
+    ax[0,1].plot(time,state_mse[:,3])
+    ax[0,1].title.set_text("cart velocity MSE vs time")
+    ax[1,1].plot(time,state_mse[:,4])
+    ax[1,1].title.set_text("theta 1 velocity MSE vs time")
+    ax[2,1].plot(time,state_mse[:,5])
+    ax[2,1].title.set_text("theta 2 veolicty MSE vs time")
+    plt.savefig(f"{get_path_to_saved_images()}/MSE_error.png")
+    plt.show()
+    plt.close()
+
+# creates plot of MSE Error over time
+def plotter_mppi(states, goal, dt):
+    states_np = np.array(states)
+    goal = np.tile(goal, (states_np.shape[0],1))
+    state_mse = np.square(states_np-goal)
+    time = np.arange(0, states_np.shape[0]*dt-dt, dt)
 
     fig, ax = plt.subplots(3,2)
     fig.tight_layout(h_pad=2)
@@ -62,9 +88,8 @@ def plotter(states, goal, dt):
 
 
 
-
 def get_path_to_saved_images():
-    path_to_images = os.path.realpath(os.path.join(os.path.dirname(__file__), 'saved_images'))
+    path_to_images = os.path.realpath(os.path.join(os.path.dirname(__file__), 'saved_data'))
 
     if not os.path.exists(path_to_images):
        os.mkdir(path_to_images)
