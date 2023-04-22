@@ -1,11 +1,18 @@
 import torch
 import argparse
+
+import tkinter as tk
+from PIL import Image, ImageTk
+from itertools import count, cycle
+
 from equations_motion import motionModel
-from visualize import visualize, plotter, plotter_mppi
+from visualize import visualize, plotter, plotter_mppi, ImageLabel
 from cost import Cost
 from mpc import MPC
 from mppi_controller import SwingupController
 from dynamics import Dynamics
+
+
 
 def wrapToPI(phase):
     x_wrap = phase% (2 * torch.pi)
@@ -124,3 +131,11 @@ elif controller_type == "MPPI":
     visualize(system_states_np, length_arm1, length_arm2, dt)
 
     plotter_mppi(system_states_np, goal_state.numpy(), dt)
+
+
+# display gif
+root = tk.Tk()
+lbl = ImageLabel(root)
+lbl.pack()
+lbl.load('saved_data/output.gif')
+root.mainloop()
