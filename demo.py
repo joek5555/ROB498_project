@@ -135,6 +135,9 @@ elif controller_type == "MPPI":
     plotter_mppi(system_states_np, goal_state.numpy(), dt)
 
 
+print("attempting to display the gif file. The gif is also saved in saved_data/output.gif")
+print("The code may not display on all systems. If it fails, please check the gif in saved_data")
+print("the gifs of the expirements displayed in the paper are also stored in saved_data")
 # display gif
 root = tk.Tk()
 lbl = ImageLabel(root)
