@@ -12,6 +12,12 @@ from celluloid import Camera
 # creates video of test run
 def visualize(states, arm1_l, arm2_l,dt):
 
+<<<<<<< HEAD
+=======
+def visualize_trajectory(states,dt):
+    i = 0.0
+    frames = []
+>>>>>>> main
     fig, ax = plt.subplots()
     camera = Camera(fig)
     for state in states:
@@ -140,3 +146,27 @@ class ImageLabel(tk.Label):
             self.after(self.delay, self.next_frame)
 
 
+def visualize_state(state,t):
+    i = 0.0
+
+    fig, ax = plt.subplots()
+    ax.set_xlim([-10, 10])
+    ax.set_ylim([-10, 10])
+    #cart = plt.
+    ax.add_patch(Rectangle((state[0]-0.5,-0.125), 1, 0.25))
+    arm1_x_endpoint = state[0] + np.sin(state[1]) * arm1_l
+    arm1_y_endpoint = np.cos(state[1]) * arm1_l
+
+    ax.plot((state[0], arm1_x_endpoint), (0, arm1_y_endpoint), lw=1.5, c = 'm') 
+    arm2_x_endpoint = arm1_x_endpoint+ np.sin(state[2]) * arm2_l
+    arm2_y_endpoint = arm1_y_endpoint + np.cos(state[2]) * arm2_l
+
+    ax.plot((arm1_x_endpoint, arm2_x_endpoint), (arm1_y_endpoint, arm2_y_endpoint), lw=1.5, c='r')
+
+    path_to_images = os.path.realpath(os.path.join(os.path.dirname(__file__), 'saved_images'))
+
+    if not os.path.exists(path_to_images):
+       os.mkdir(path_to_images)
+
+    plt.savefig(f'{path_to_images}/state_{t}.png')
+    plt.close()
