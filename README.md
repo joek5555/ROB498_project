@@ -4,7 +4,7 @@ An inverted double pendulum is an example of a highly nonlinear system that is d
 
 Using the equations of motion for an inverted double pendulum, a simulator was build that will visualize how the system will behave when a force is applied to the cart. The results of the DDP,. iLQR, and MPPI controllers are shown below. 
 
-The python dependencies for this project are: 
+The python dependencies for this project are: numpy, matplotlib, torch, celluloid
 
 To run a test, navigate to the directory holding demo.py and execute it. Note that you can specify from the command line what controller you would like to test using the -c flag. By default the DDP controller will be launched.
 
@@ -12,6 +12,16 @@ To run a test, navigate to the directory holding demo.py and execute it. Note th
 
 ```python3 demo.py -c iLQR```
 
-```python3 demo.py -c MPPI```
+```python3 demo.py -c MPPI```  
 
-DDP Controler
+### DDP Controler
+
+![DDP Controller gif](saved_data/DDP_report.gif)
+
+### iLQR controller
+
+![iLQR Controller gif](saved_data/iLQR_report.gif)
+
+### MPPI controller
+
+![MPPI Controller gif](saved_data/MPPI_report.gif)
